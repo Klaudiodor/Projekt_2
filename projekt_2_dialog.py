@@ -52,7 +52,7 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
             iface.messageBar().pushMessage("Error", "Aktywna warstwa nie jest warstwą punktową", level=2)
             return
         for feature in warstwa.getFeatures():
-            item = QtWidgets.QListWidgetItem(f"Point ID: {feature.id()}")
+            item = QtWidgets.QListWidgetItem(f"Numer punktu: {feature.attribute('nr_punktu')}")
             item.setData(QtCore.Qt.UserRole, feature)
             self.point_list_widget.addItem(item)
     
@@ -64,7 +64,7 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
     def oblicz_wys(self, punkty):
         h = round((abs(punkty[0].attribute('wysokosc') - punkty[1].attribute('wysokosc'))), 2)
 
-        iface.messageBar().pushMessage("Wynik", f"Różnica wysokości między punktami o numerach {punkty[0].id()}, {punkty[1].id()} wynosi: {h} [m]", level=Qgis.Success)
+        iface.messageBar().pushMessage("Wynik", f"Różnica wysokości między punktami o numerach {punkty[0].attribute('nr_punktu')} i {punkty[1].attribute('nr_punktu')} wynosi: {h} [m]", level=Qgis.Success)
     
     def oblicz_pole(self, punkty):
         xy = [(p.geometry().asPoint().x(), p.geometry().asPoint().y()) for p in punkty]
@@ -78,7 +78,7 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             pole = round(pole, 2)
         
-        id_punkty = ", ".join(str(p.id()) for p in punkty)
+        id_punkty = ", ".join(str(p.attribute('nr_punktu')) for p in punkty)
 
         iface.messageBar().pushMessage("Wynik", f"Pole powierzchni figury o wierzchołkach w punktach o numerach {id_punkty} wynosi: {pole} [{jednostka}]", level=Qgis.Success)
     
