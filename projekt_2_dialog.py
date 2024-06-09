@@ -52,7 +52,11 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
             iface.messageBar().pushMessage("Error", "Aktywna warstwa nie jest warstwą punktową", level=2)
             return
         for feature in warstwa.getFeatures():
-            item = QtWidgets.QListWidgetItem(f"Numer punktu: {feature.attribute('nr_punktu')}")
+            if feature.attribute('nr_punktu') is not None:
+                item = QtWidgets.QListWidgetItem(f"Numer punktu: {feature.attribute('nr_punktu')}")
+            else:
+                item = QtWidgets.QListWidgetItem(f"ID punktu: {feature.id()}")
+
             item.setData(QtCore.Qt.UserRole, feature)
             self.point_list_widget.addItem(item)
     
@@ -62,12 +66,21 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
         return [item.data(QtCore.Qt.UserRole) for item in selected_items]
     
     def oblicz_wys(self, punkty):
-        h = round((abs(punkty[0].attribute('wysokosc') - punkty[1].attribute('wysokosc'))), 2)
-
-        iface.messageBar().pushMessage("Wynik", f"Różnica wysokości między punktami o numerach {punkty[0].attribute('nr_punktu')} i {punkty[1].attribute('nr_punktu')} wynosi: {h} [m]", level=Qgis.Success)
+        if punkty[0].attribute('wysokosc') is not None and punkty[1].attribute('wysokosc') is not None:
+            h1 = punkty[0].attribute('wysokosc')
+            h2 = punkty[1].attribute('wysokosc')
+            h = round((abs(h1 - h2)), 2)
+            iface.messageBar().pushMessage("Wynik", f"Różnica wysokości między punktami o numerach {punkty[0].attribute('nr_punktu')} i {punkty[1].attribute('nr_punktu')} wynosi: {h} [m]", level=Qgis.Success)
+        elif punkty[0].attribute('h_plevrf20') is not None and punkty[1].attribute('h_plevrf20') is not None:
+            h1 = punkty[0].attribute('h_plevrf20')
+            h2 = punkty[1].attribute('h_plevrf20')
+            h = round((abs(h1 - h2)), 2)
+            iface.messageBar().pushMessage("Wynik", f"Różnica wysokości między punktami o numerach {punkty[0].attribute('nr_punktu')} i {punkty[1].attribute('nr_punktu')} wynosi: {h} [m]", level=Qgis.Success)
+        else:
+            iface.messageBar().pushMessage("Error", f"Wybrane punkty nie posiadają atrybutu 'wysokosc' ani atrybutu 'h_plevrf20'", level=2)
     
     def oblicz_pole(self, punkty):
-        xy = [(p.geometry().asPoint().x(), p.geometry().asPoint().y()) for p in punkty]
+        xy = [(float(p.geometry().asPoint().x()), float(p.geometry().asPoint().y())) for p in punkty]
         pole = self.metoda_gaussa(xy)
 
         jednostka = self.combo_box.currentText()
@@ -78,7 +91,11 @@ class Projekt2Dialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             pole = round(pole, 2)
         
-        id_punkty = ", ".join(str(p.attribute('nr_punktu')) for p in punkty)
+        if punkty[0].attribute('nr_punktu') is not None:
+            id_punkty = ", ".join(str(p.attribute('nr_punktu')) for p in punkty)
+        else:
+            id_punkty = ", ".join(str(p.id()) for p in punkty)
+        
 
         iface.messageBar().pushMessage("Wynik", f"Pole powierzchni figury o wierzchołkach w punktach o numerach {id_punkty} wynosi: {pole} [{jednostka}]", level=Qgis.Success)
     
